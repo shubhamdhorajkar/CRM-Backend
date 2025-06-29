@@ -1,16 +1,17 @@
 package com.realestate.crm.model;
 
-import java.time.LocalDate;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.realestate.crm.enumerations.ConstructionStatus;
+import com.realestate.crm.enumerations.DataSource;
+import com.realestate.crm.enumerations.LeadStatus;
+
 import java.util.Date;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 
 @Entity
 public class Leads {
@@ -19,167 +20,228 @@ public class Leads {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	private String firstVisit;  // e.g., "Site Visit", "Revisit"
-    private LocalDate siteVisitDate;
-    private String contactName;
-    private String contact;
+	 // Contact Information
+    private String fullName;
     private String email;
-    private String nationality;
-    private String ageGroup;
-    private String ethnicity;
-    private String employmentType;
-    private String companyName;
-    private String officeLocality;
+    private String phone;
+
+    // Source: MANUAL, EXCEL, META
+    @Enumerated(EnumType.STRING)
+    private DataSource source;
+
+    // Status: NEW, HOT, LOST, etc.
+    @Enumerated(EnumType.STRING)
+    private LeadStatus status;
+
+    private String assignee; // User who converted/owns the lead
+
+    // Timestamps
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime nextFollowUpDate;
+    private LocalDateTime nextSiteVisitDate;
+
+    // Location & Preferences
+    private String locationLookingFor;
+    private String clientAddress;
     private String pincode;
-    private String industry;
-    private String address1;
-    private String locality;
-    private String unitType;
-    private String budget;
-    private String areaSqFeet;
-    private String constructionStatus;
-    private String seekingFor;
-    
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(nullable = false, updatable = false)
-    private Date createdAt; // Stores the lead creation time
+    private BigDecimal budget;
+    private Double areaSqFt;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date closedAt; // Stores when the lead was closed (nullable)
+    @Enumerated(EnumType.STRING)
+    private ConstructionStatus constructionStatus; // UNDER_CONSTRUCTION, READY_TO_MOVE
+    private String seekingFor; // 2 BHK, Commercial, etc.
 
-    private String status;
+    // Meta Lead ID (optional, if source is META)
+    private String metaLeadId;
+
+    // Notes
+    private String notes;
+
+    @Column(name = "is_sample")
+    private boolean isSample = true; // True by default for new leads
+
+    @Column(name = "not_connected")
+    private boolean notConnected = false; // Set true if user tries and fails to reach lead
     
-    @PrePersist
-    protected void onCreate() {
-        createdAt = new Date(); // Auto-set creation time
-    }
-    
+    @OneToMany(mappedBy = "lead", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LeadAuditLog> auditLogs = new ArrayList<>();
+
 	public Long getId() {
 		return id;
 	}
+
 	public void setId(Long id) {
 		this.id = id;
 	}
-	public String getFirstVisit() {
-		return firstVisit;
+
+	public String getFullName() {
+		return fullName;
 	}
-	public void setFirstVisit(String firstVisit) {
-		this.firstVisit = firstVisit;
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
 	}
-	public LocalDate getSiteVisitDate() {
-		return siteVisitDate;
-	}
-	public void setSiteVisitDate(LocalDate siteVisitDate) {
-		this.siteVisitDate = siteVisitDate;
-	}
-	public String getContactName() {
-		return contactName;
-	}
-	public void setContactName(String contactName) {
-		this.contactName = contactName;
-	}
-	public String getContact() {
-		return contact;
-	}
-	public void setContact(String contact) {
-		this.contact = contact;
-	}
+
 	public String getEmail() {
 		return email;
 	}
+
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	public String getNationality() {
-		return nationality;
+
+	public String getPhone() {
+		return phone;
 	}
-	public void setNationality(String nationality) {
-		this.nationality = nationality;
+
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
-	public String getAgeGroup() {
-		return ageGroup;
+
+	public DataSource getSource() {
+		return source;
 	}
-	public void setAgeGroup(String ageGroup) {
-		this.ageGroup = ageGroup;
+
+	public void setSource(DataSource source) {
+		this.source = source;
 	}
-	public String getEthnicity() {
-		return ethnicity;
+
+	public LeadStatus getStatus() {
+		return status;
 	}
-	public void setEthnicity(String ethnicity) {
-		this.ethnicity = ethnicity;
+
+	public void setStatus(LeadStatus status) {
+		this.status = status;
 	}
-	public String getEmploymentType() {
-		return employmentType;
+
+	public String getAssignee() {
+		return assignee;
 	}
-	public void setEmploymentType(String employmentType) {
-		this.employmentType = employmentType;
+
+	public void setAssignee(String assignee) {
+		this.assignee = assignee;
 	}
-	public String getCompanyName() {
-		return companyName;
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
 	}
-	public void setCompanyName(String companyName) {
-		this.companyName = companyName;
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
 	}
-	public String getOfficeLocality() {
-		return officeLocality;
+
+	public LocalDateTime getNextFollowUpDate() {
+		return nextFollowUpDate;
 	}
-	public void setOfficeLocality(String officeLocality) {
-		this.officeLocality = officeLocality;
+
+	public void setNextFollowUpDate(LocalDateTime nextFollowUpDate) {
+		this.nextFollowUpDate = nextFollowUpDate;
 	}
+
+	public LocalDateTime getNextSiteVisitDate() {
+		return nextSiteVisitDate;
+	}
+
+	public void setNextSiteVisitDate(LocalDateTime nextSiteVisitDate) {
+		this.nextSiteVisitDate = nextSiteVisitDate;
+	}
+
+	public String getLocationLookingFor() {
+		return locationLookingFor;
+	}
+
+	public void setLocationLookingFor(String locationLookingFor) {
+		this.locationLookingFor = locationLookingFor;
+	}
+
+	public String getClientAddress() {
+		return clientAddress;
+	}
+
+	public void setClientAddress(String clientAddress) {
+		this.clientAddress = clientAddress;
+	}
+
 	public String getPincode() {
 		return pincode;
 	}
+
 	public void setPincode(String pincode) {
 		this.pincode = pincode;
 	}
-	public String getIndustry() {
-		return industry;
-	}
-	public void setIndustry(String industry) {
-		this.industry = industry;
-	}
-	public String getAddress1() {
-		return address1;
-	}
-	public void setAddress1(String address1) {
-		this.address1 = address1;
-	}
-	public String getLocality() {
-		return locality;
-	}
-	public void setLocality(String locality) {
-		this.locality = locality;
-	}
-	public String getUnitType() {
-		return unitType;
-	}
-	public void setUnitType(String unitType) {
-		this.unitType = unitType;
-	}
-	public String getBudget() {
+
+	public BigDecimal getBudget() {
 		return budget;
 	}
-	public void setBudget(String budget) {
+
+	public void setBudget(BigDecimal budget) {
 		this.budget = budget;
 	}
-	public String getAreaSqFeet() {
-		return areaSqFeet;
+
+	public Double getAreaSqFt() {
+		return areaSqFt;
 	}
-	public void setAreaSqFeet(String areaSqFeet) {
-		this.areaSqFeet = areaSqFeet;
+
+	public void setAreaSqFt(Double areaSqFt) {
+		this.areaSqFt = areaSqFt;
 	}
-	public String getConstructionStatus() {
+
+	public ConstructionStatus getConstructionStatus() {
 		return constructionStatus;
 	}
-	public void setConstructionStatus(String constructionStatus) {
+
+	public void setConstructionStatus(ConstructionStatus constructionStatus) {
 		this.constructionStatus = constructionStatus;
 	}
+
 	public String getSeekingFor() {
 		return seekingFor;
 	}
+
 	public void setSeekingFor(String seekingFor) {
 		this.seekingFor = seekingFor;
 	}
+
+	public String getMetaLeadId() {
+		return metaLeadId;
+	}
+
+	public void setMetaLeadId(String metaLeadId) {
+		this.metaLeadId = metaLeadId;
+	}
+
+	public String getNotes() {
+		return notes;
+	}
+
+	public void setNotes(String notes) {
+		this.notes = notes;
+	}
+
+	public List<LeadAuditLog> getAuditLogs() {
+		return auditLogs;
+	}
+
+	public void setAuditLogs(List<LeadAuditLog> auditLogs) {
+		this.auditLogs = auditLogs;
+	}
+
+	public boolean isSample() {
+		return isSample;
+	}
+
+	public void setSample(boolean isSample) {
+		this.isSample = isSample;
+	}
+
+	public boolean isNotConnected() {
+		return notConnected;
+	}
+
+	public void setNotConnected(boolean notConnected) {
+		this.notConnected = notConnected;
+	}
+    
     
     
 }
